@@ -34,9 +34,10 @@ class TransactionHistoryModel(models.Model):
     transactionId = models.AutoField(primary_key=True)
     transactionName = models.CharField(max_length=200)
     transactionCredit = models.CharField(max_length=200)
-    transactionDebit = models.CharField(max_length=200)
+    transactionNewDebit = models.CharField(max_length=20)
+    transactionTotalDebit = models.CharField(max_length=20)
     transactionPending = models.CharField(max_length=200)
-    transactionContact = models.CharField(max_length=200,blank=True,null=True)
+    transactionContact = models.CharField(max_length=10,blank=True,null=True)
     transactionAddress = models.TextField(max_length=500,blank=True,null=True)
     transactionAadharNumber = models.CharField(max_length=12,blank=True,null=True)
     transactionPanNumber = models.CharField(max_length=10,blank=True,null=True)
@@ -44,9 +45,7 @@ class TransactionHistoryModel(models.Model):
         CustomersModel, on_delete=models.CASCADE)
     transactionBusiness = models.ForeignKey(
         BusinessModel, on_delete=models.CASCADE)
-    creationTime = models.DateTimeField(
-        auto_now_add=True, null=True, blank=True
-    )
+    creationTime = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return self.transactionName

@@ -62,8 +62,8 @@ class DeleteBusinessView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        businessId = request.data.get('businessId')
+    def get(self, request):
+        businessId = request.query_params['businessId']
         try:
             businessObj = BusinessModel.objects.get(businessId=businessId)
             if businessObj:
@@ -81,7 +81,7 @@ class DeleteBusinessView(APIView):
         except Exception as e:
             response_message = error.APIResponse(
                 404, "Invalid BusinessId", None).respond()
-
+        finally:
             return Response(response_message)
 
 # Update Business Api
