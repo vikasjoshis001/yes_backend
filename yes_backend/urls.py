@@ -16,9 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from login.views import LoginView
-from Business.views import AddBusinessView,GetBusinessView,DeleteBusinessView,EditBusinessView
-from Customers.views import AddCustomerView,GetCustomersView,DeleteCustomerView,EditCustomerView
-from finance.views import AddTransactionView,GetTransactionView,CreateCSV,BackUpDataBase
+from Business.views import AddBusinessView, GetBusinessView, DeleteBusinessView, EditBusinessView
+from Customers.views import AddCustomerView, GetCustomersView, DeleteCustomerView, EditCustomerView
+from finance.views import AddTransactionView, GetTransactionView, CreateCSV, BackUpDataBase, CopyCustomersView
 
 
 urlpatterns = [
@@ -36,15 +36,17 @@ urlpatterns = [
     path('getTransaction/', GetTransactionView.as_view()),
     path('createCSV/', CreateCSV.as_view()),
     path('backup/', BackUpDataBase.as_view()),
-    
-    
-    
-    
-    
-    
-    
+    path('copy/', CopyCustomersView.as_view()),
 
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
 ]

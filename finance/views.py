@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from requirements import success, error
 from Customers.models import TransactionHistoryModel, CustomersModel
-from Customers.serializers import TransactionHistorySerializer
+from Customers.serializers import TransactionHistorySerializer,CustomersSerializer
 from Business.models import BusinessModel
 
 # Email
@@ -204,32 +204,6 @@ class BackUpDataBase(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # try:
-        #     headers = {
-        #         "Authorization": "Bearer 1//04YG-qyy5gIs_CgYIARAAGAQSNwF-L9IrgUQkvGqjD1bnclOnuJNivSnOdNrkCX3OyUds7A6hPYN-E6hj2cBv1MFCKGj2tMp1xqM"}
-        #     para = {
-        #         "name": "db.sqlite3",
-        #         # "parents": ["1uKXpvoR3B15S-HZ--h-h3qjxlFUKJN6S"]
-        #     }
-
-        #     files = {
-        #         'data': ('metadata', json.dumps(para), 'application/json; charset=UTF-8'),
-        #         'file': open("./db.sqlite3", "rb")
-        #     }
-        #     r = requests.post(
-        #         "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        #         headers=headers,
-        #         files=files
-        #     )
-        #     print(r.text)
-        #     response_message = success.APIResponse(
-        #         200, "Database file Uploaded Successfully", None).respond()
-        # except Exception as e:
-        #     response_message = error.APIResponse(404, "Unable to Upload Database", {
-        #                                          'error': str(e)}).respond()
-        # finally:
-        #     return Response(response_message)
-        
         try:
             subject = "Database  Backup of Yes MultiServices"
             message = ""
@@ -254,4 +228,77 @@ class BackUpDataBase(APIView):
             "msg": "Sorry!Mail not Sent...",
             }
             return Response(data=dic)
+        
+        
+# Copy Customers Api
+
+
+class CopyCustomersView(APIView):
+    """ Api for Copy Customers from One Business to Another """
     
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        businessId = request.data.get('businessId')
+        customersId = request.data.get('customersId')
+        
+        try:
+            for userId in customersId:
+                customerObj = CustomersModel.objects.get(customerId = userId)
+                newCustomerName = customerObj.customerName
+                newCustomerDebit= customerObj.customerDebit
+                newCustomerCredit = customerObj.customerCredit
+                newCustomerPending = customerObj.customerPending
+                newCustomerAddress = customerObj.customerAddress
+                newCustomerAadharNumber = customerObj.customerAadharNumber
+                newCustomerPanNumber = customerObj.customerPanNumber
+                newCustomerContact = customerObj.customerContact
+                customer_dic = {
+                    "customerName": newCustomerName,
+                    "customerDebit": newCustomerDebit,
+                    "customerCredit": newCustomerCredit,
+                    "customerPending": newCustomerPending,
+                    "customerContact": newCustomerContact,
+                    "customerAddress": newCustomerAddress,
+                    "customerAadharNumber": newCustomerAadharNumber,
+                    "customerPanNumber": newCustomerPanNumber,
+                    "customerBusiness": businessId,
+                }
+                serializer = CustomersSerializer(data=customer_dic)
+                if (serializer.is_valid()):
+                    serializer.save()
+                else:
+                    response_message = success.APIResponse(
+                        404, "Unable to add to Customer Model", {'error': None}).respond()
+                    return Response(response_message)
+                transaction_dic = {
+                    "transactionName": newCustomerName,
+                    "transactionNewDebit": newCustomerDebit,
+                    "transactionTotalDebit": newCustomerDebit,
+                    "transactionCredit": newCustomerCredit,
+                    "transactionPending": newCustomerPending,
+                    "transactionContact": newCustomerContact,
+                    "transactionAddress": newCustomerAddress,
+                    "transactionAadharNumber": newCustomerAadharNumber,
+                    "transactionPanNumber": newCustomerPanNumber,
+                    "transactionBusiness": businessId,
+                    "transactionCustomer": serializer.data['customerId']
+                }
+                serializer = TransactionHistorySerializer(data=transaction_dic)
+                if (serializer.is_valid()):
+                    serializer.save()
+                else:
+                    response_message = success.APIResponse(
+                        404, "Unable to add to Transaction Model", {'error': str(e)}).respond()
+                    return Response(response_message)
+
+            response_message = success.APIResponse(
+                200, "Customer Added Successfully", customer_dic).respond()
+        except Exception as e:
+            response_message = error.APIResponse(404, "Unable to add Customer", {
+                                                'error': str(e)}).respond()
+        finally:
+            return Response(response_message)
+            
+            
+        
