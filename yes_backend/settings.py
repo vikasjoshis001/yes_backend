@@ -26,7 +26,7 @@ SECRET_KEY = 'fse-&w=kk$*8c-c-szkk+%d(4bq&rn37)4$_xlyrgb(tq+kcu9'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 CORS_ORIGIN_ALLOW_ALL = True
 # Application definition
