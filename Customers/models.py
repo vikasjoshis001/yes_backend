@@ -10,13 +10,16 @@ class CustomersModel(models.Model):
     """ Customer Database Table """
     customerId = models.AutoField(primary_key=True)
     customerName = models.CharField(max_length=200)
+    customerContact = models.CharField(max_length=10, blank=True, null=True)
+    customerAddress = models.TextField(max_length=500, blank=True, null=True)
+    customerAadharNumber = models.CharField(
+        max_length=12, blank=True, null=True)
+    customerPanNumber = models.CharField(max_length=10, blank=True, null=True)
+    customerDOB = models.CharField(max_length=20, blank=True, null=True)
     customerCredit = models.CharField(max_length=20)
     customerDebit = models.CharField(max_length=20)
     customerPending = models.CharField(max_length=20)
-    customerContact = models.CharField(max_length=10,blank=True,null=True)
-    customerAddress = models.TextField(max_length=500,blank=True,null=True)
-    customerAadharNumber = models.CharField(max_length=12,blank=True,null=True)
-    customerPanNumber = models.CharField(max_length=10,blank=True,null=True)
+    customerStatus = models.BooleanField(default=False)
     customerBusiness = models.ForeignKey(
         BusinessModel, on_delete=models.CASCADE)
     creationTime = models.DateTimeField(
@@ -25,27 +28,3 @@ class CustomersModel(models.Model):
 
     def __str__(self):
         return self.customerName
-
-# Transaction History Model
-
-
-class TransactionHistoryModel(models.Model):
-    """ Transaction History Database Table """
-    transactionId = models.AutoField(primary_key=True)
-    transactionName = models.CharField(max_length=200)
-    transactionCredit = models.CharField(max_length=200)
-    transactionNewDebit = models.CharField(max_length=20)
-    transactionTotalDebit = models.CharField(max_length=20)
-    transactionPending = models.CharField(max_length=200)
-    transactionContact = models.CharField(max_length=10,blank=True,null=True)
-    transactionAddress = models.TextField(max_length=500,blank=True,null=True)
-    transactionAadharNumber = models.CharField(max_length=12,blank=True,null=True)
-    transactionPanNumber = models.CharField(max_length=10,blank=True,null=True)
-    transactionCustomer = models.ForeignKey(
-        CustomersModel, on_delete=models.CASCADE)
-    transactionBusiness = models.ForeignKey(
-        BusinessModel, on_delete=models.CASCADE)
-    creationTime = models.DateField(auto_now_add=True)
-
-    def __str__(self):
-        return self.transactionName
