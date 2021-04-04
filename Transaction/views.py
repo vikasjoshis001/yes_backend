@@ -145,7 +145,7 @@ class CreateTransactionCSV(APIView):
             newPath = path
             filename = newPath + "/" + name + \
                 " Transaction History - " + datetime.now().strftime("%d%m%Y%H%M%S") + ".csv"
-            row_list = [["Date", "Name", "Credit", "Debit", "", "Pending"],
+            row_list = [["Date", "Name", "Credit", "Debit", "Pending"],
                         [None, None, None, None, None]]
             with open(filename, 'w', newline='') as file:
                 writer = csv.writer(file)
@@ -162,13 +162,13 @@ class CreateTransactionCSV(APIView):
                 }
                 totalCredit += int(transact['transactionCredit'])
                 totalDebit += int(transact['transactionDebit'])
-                totalPending += int(transact['transactionPending'])
 
                 row_list = [[dic['Date'], dic['Name'],
                              dic['Credit'], dic['Debit'], dic['Pending']]]
                 with open(filename, 'a') as file:
                     writer = csv.writer(file)
                     writer.writerows(row_list)
+            totalPending = totalCredit-totalDebit
             row_list = [["", "Total", totalCredit, totalDebit, totalPending]]
             with open(filename, 'a') as file:
                 writer = csv.writer(file)

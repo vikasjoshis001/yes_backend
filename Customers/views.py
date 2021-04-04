@@ -421,7 +421,7 @@ class CreateProfitCSV(APIView):
             newPath = path
             filename = newPath + "/" + name + \
                 " Customer Profit" + datetime.now().strftime("%d%m%Y%H%M%S") + ".csv"
-            row_list = [["Business", "Name", "Credit", "Debit", "", "Pending"],
+            row_list = [["Business", "Name", "Credit", "Debit", "Pending"],
                         [None, None, None, None, None]]
             with open(filename, 'w', newline='') as file:
                 writer = csv.writer(file)
