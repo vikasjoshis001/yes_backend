@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import CustomersModel, TransactionHistoryModel
+from .models import CustomersModel
 # Register your models here.
 
 admin.site.register(CustomersModel)
-admin.site.register(TransactionHistoryModel)
