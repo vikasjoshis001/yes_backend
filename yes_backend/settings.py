@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'Business',
     'Customers',
+    'Transaction',
     'corsheaders',
     'drf_yasg',
 ]
@@ -145,3 +147,27 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'crunchbase.io@gmail.com'
 EMAIL_HOST_PASSWORD = 'CrunchBase@04041608'
+
+# Time Zone
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'Asia/Kolkata'
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = False
+
+TIME_INPUT_FORMATS = ['%H:%M']  # '14:30'
+
+DATE_INPUT_FORMATS = ['%d %B %Y', '%d %B, %Y']  # '25 October 2006', '25 October, 2006'
+
+
+DATETIME_INPUT_FORMATS = ['%d-%m-%Y %H:%M']
+
+
+# Variables
+
+sheetsFolderPath = "/home/vikasjoshis001/Desktop"
+sheetsFolder = "CSV Sheets"
