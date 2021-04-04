@@ -171,3 +171,4 @@ DATETIME_INPUT_FORMATS = ['%d-%m-%Y %H:%M']
 
 sheetsFolderPath = "/home/vikasjoshis001/Desktop"
 sheetsFolder = "CSV Sheets"
+sheetsCustomers = "Customers Sheets"

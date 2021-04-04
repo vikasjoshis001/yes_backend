@@ -16,9 +16,9 @@ class CustomersModel(models.Model):
         max_length=12, blank=True, null=True)
     customerPanNumber = models.CharField(max_length=10, blank=True, null=True)
     customerDOB = models.CharField(max_length=20, blank=True, null=True)
-    customerCredit = models.CharField(max_length=20)
-    customerDebit = models.CharField(max_length=20)
-    customerPending = models.CharField(max_length=20)
+    customerCredit = models.CharField(max_length=20,blank=True, null=True,default=0)
+    customerDebit = models.CharField(max_length=20,blank=True, null=True,default=0)
+    customerPending = models.CharField(max_length=20,blank=True, null=True)
     customerStatus = models.BooleanField(default=False)
     customerBusiness = models.ForeignKey(
         BusinessModel, on_delete=models.CASCADE)

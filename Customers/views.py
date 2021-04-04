@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
-from yes_backend.settings import sheetsFolder, sheetsFolderPath
+from yes_backend.settings import sheetsFolder, sheetsFolderPath, sheetsCustomers
 
 from requirements import success, error
 from .models import CustomersModel
@@ -92,6 +92,9 @@ class GetCustomersView(generics.ListCreateAPIView):
     def get(self, request, **kwargs):
         try:
             businessId = request.query_params['businessId']
+            businessObj = BusinessModel.objects.get(
+                businessId=businessId)
+            businessName = businessObj.businessName
             customerList = CustomersModel.objects.filter(
                 customerBusiness=businessId)
             serializer = CustomersSerializer(customerList, many=True)
@@ -104,7 +107,7 @@ class GetCustomersView(generics.ListCreateAPIView):
             totalDict['totalCredit'] = totalCredit
             totalDict['totalDebit'] = totalDebit
             totalDict['totalPending'] = totalPending
-
+            totalDict['businessName'] = businessName
             dic = {
                 "status": 200,
                 "msg": "List of All Customers",
@@ -215,9 +218,10 @@ class CustomerProfit(APIView):
             
             customerDic = {}
             customerList = []
-            customerObj = CustomersModel.objects.filter(customerName=customerName,
+            customerObjList = CustomersModel.objects.filter(customerName=customerName,
                                                         customerContact=customerContact, customerAddress=customerAddress, customerAadharNumber=customerAadharNumber, customerPanNumber=customerPanNumber, customerDOB=customerDOB)
-            serializer = CustomersSerializer(customerObj, many=True)
+            print(customerObjList)
+            serializer = CustomersSerializer(customerObjList, many=True)
             totalCredit = totalDebit = totalPending = 0
             totalDict = {}
             for i in range(len(serializer.data)):
@@ -237,6 +241,7 @@ class CustomerProfit(APIView):
             totalDict['totalCredit'] = totalCredit
             totalDict['totalDebit'] = totalDebit
             totalDict['totalPending'] = totalPending
+            totalDict['customerName'] = customerName
             print(totalCredit)
 
             dic = {
@@ -272,6 +277,7 @@ class CopyCustomersView(APIView):
                 newCustomerAadharNumber = customerObj.customerAadharNumber
                 newCustomerPanNumber = customerObj.customerPanNumber
                 newCustomerContact = customerObj.customerContact
+                newCustomerDOB = customerObj.customerDOB
                 customer_dic = {
                     "customerName": newCustomerName,
                     "customerDebit": 0,
@@ -281,6 +287,7 @@ class CopyCustomersView(APIView):
                     "customerAddress": newCustomerAddress,
                     "customerAadharNumber": newCustomerAadharNumber,
                     "customerPanNumber": newCustomerPanNumber,
+                    "customerDOB":newCustomerDOB,
                     "customerBusiness": businessId,
                 }
                 serializer = CustomersSerializer(data=customer_dic)
@@ -330,7 +337,11 @@ class CreateCustomersCSV(APIView):
             totalCredit = totalDebit = totalPending = 0
             # Folder Path
             folderPath = sheetsFolderPath + "/" + \
-                sheetsFolder + "/" + businessName.businessName
+                sheetsFolder
+            path = os.path.join(folderPath, businessName.businessName)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            folderPath = path
             newFolder = datetime.now().strftime("%d%m%Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
@@ -394,14 +405,22 @@ class CreateProfitCSV(APIView):
             totalCredit = totalDebit = totalPending = 0
             # Folder Path
             folderPath = sheetsFolderPath + "/" + \
-                sheetsFolder + "/" + businessName
+                sheetsFolder
+            path = os.path.join(folderPath, businessName)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            folderPath = path
             newFolder = datetime.now().strftime("%d%m%Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
             newPath = path
+            path = os.path.join(newPath, name)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            newPath = path
             filename = newPath + "/" + name + \
-                " Customer History - " + datetime.now().strftime("%d%m%Y%H%M%S") + ".csv"
+                " Customer Profit" + datetime.now().strftime("%d%m%Y%H%M%S") + ".csv"
             row_list = [["Business", "Name", "Credit", "Debit", "", "Pending"],
                         [None, None, None, None, None]]
             with open(filename, 'w', newline='') as file:

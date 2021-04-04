@@ -83,6 +83,9 @@ class GetTransactionView(generics.ListCreateAPIView):
     def get(self, request, **kwargs):
         try:
             transactionCustomer = request.query_params['customerId']
+            customerObj = CustomersModel.objects.get(
+                customerId=transactionCustomer)
+            customerName = customerObj.customerName
             transactions_list = TransactionHistoryModel.objects.filter(
                 transactionCustomer=transactionCustomer)
             serializer = TransactionHistorySerializer(
@@ -96,6 +99,7 @@ class GetTransactionView(generics.ListCreateAPIView):
             totalDict['totalCredit'] = totalCredit
             totalDict['totalDebit'] = totalDebit
             totalDict['totalPending'] = totalPending
+            totalDict['customerName'] = customerName
             dic = {
                 "status": 200,
                 "msg": "List of All Transactions",
@@ -125,9 +129,17 @@ class CreateTransactionCSV(APIView):
             totalCredit = totalDebit = totalPending = 0
             # Folder Path
             folderPath = sheetsFolderPath + "/" + \
-                sheetsFolder + "/" + businessName.businessName
+                sheetsFolder
+            path = os.path.join(folderPath, businessName.businessName)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            folderPath = path
             newFolder = datetime.now().strftime("%d%m%Y")
             path = os.path.join(folderPath, newFolder)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            newPath = path
+            path = os.path.join(newPath, name)
             if not os.path.exists(path):
                 os.mkdir(path)
             newPath = path
@@ -140,8 +152,9 @@ class CreateTransactionCSV(APIView):
                 writer.writerows(row_list)
 
             for transact in transaction:
+                newDate = transact['transactionDate'] + " (" + transact['transactionTime'] +" )"
                 dic = {
-                    "Date": transact['creationTime'],
+                    "Date": newDate,
                     "Name": transact['transactionName'],
                     "Credit": transact['transactionCredit'],
                     "Debit": transact['transactionDebit'],

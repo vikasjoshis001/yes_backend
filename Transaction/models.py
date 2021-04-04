@@ -10,8 +10,8 @@ class TransactionHistoryModel(models.Model):
     """ Transaction History Database Table """
     transactionId = models.AutoField(primary_key=True)
     transactionName = models.CharField(max_length=200)
-    transactionCredit = models.CharField(max_length=200)
-    transactionDebit = models.CharField(max_length=20)
+    transactionCredit = models.CharField(max_length=200,default=0)
+    transactionDebit = models.CharField(max_length=20,default=0)
     transactionPending = models.CharField(max_length=200)
     transactionCustomer = models.ForeignKey(
         CustomersModel, on_delete=models.CASCADE)
