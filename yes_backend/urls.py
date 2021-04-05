@@ -17,10 +17,14 @@ from django.contrib import admin
 from django.urls import path
 from login.views import LoginView
 from Business.views import AddBusinessView, GetBusinessView, DeleteBusinessView, EditBusinessView
-from Customers.views import AddCustomerView, GetCustomersView, DeleteCustomerView, EditCustomerView,CustomerProfit,CreateCustomersCSV,CopyCustomersView,CreateProfitCSV
+from Customers.views import AddCustomerView, GetCustomersView, DeleteCustomerView, EditCustomerView,CustomerProfit,CreateCustomersCSV,CopyCustomersView,CreateProfitCSV,CreateCustomerPdf,CreateProfitPdf
 from finance.views import BackUpDataBase
-from Transaction.views import AddTransactionView, GetTransactionView,CreateTransactionCSV
+from Transaction.views import AddTransactionView, GetTransactionView,CreateTransactionCSV,CreateTransactionPdf
  
+from . import settings
+from django.contrib.staticfiles.urls import static
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -56,22 +60,18 @@ urlpatterns = [
     path('copyCustomers/', CopyCustomersView.as_view()),
     path('createCustomersCSV/', CreateCustomersCSV.as_view()),
     path('createProfitCSV/', CreateProfitCSV.as_view()),
+    path('createCustomerPdf/', CreateCustomerPdf.as_view()),
+    path('createProfitPdf/', CreateProfitPdf.as_view()),
+    
     
     path('addTransaction/', AddTransactionView.as_view()),
     path('getTransaction/', GetTransactionView.as_view()),
     path('createTransactionCSV/', CreateTransactionCSV.as_view()),
+    path('createTransactionPdf/', CreateTransactionPdf.as_view()),
     
     path('backup/', BackUpDataBase.as_view()),
-
-
-
-
-
-
-
-
-
-
-
-
 ]
+
+
+urlpatterns += staticfiles_urlpatterns()
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

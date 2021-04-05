@@ -2,20 +2,30 @@ import csv
 import os
 import pandas as pd
 from datetime import datetime
+import shutil
 
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
-from yes_backend.settings import sheetsFolder, sheetsFolderPath
+from yes_backend.settings import sheetsFolder, sheetsFolderPath, sheetsCustomers,currentPath
 
 from requirements import success, error
-from Customers.models import CustomersModel
-from Customers.serializers import CustomersSerializer
+from Customers.models import CustomersModel,SavePdf,YesMultiServicesLogo
+from Customers.serializers import CustomersSerializer,SavePdfSerializer,YesMultiServicesLogoSerializer
 from Business.models import BusinessModel
 from .models import TransactionHistoryModel
 from .serializers import TransactionHistorySerializer
+
+# PDF
+from Customers.utils import render_to_pdf
+from io import BytesIO
+from django.core.files import File
+from PyPDF2 import PdfFileReader, PdfFileWriter
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+
 # Create your views here.
 # Api for Add Transaction
 
@@ -181,3 +191,100 @@ class CreateTransactionCSV(APIView):
                 'error': str(e)}).respond()
         finally:
             return Response(response_message)
+
+
+class CreateTransactionPdf(APIView):
+    """ API for Creating Pdf of Grades and SGPA"""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        transaction_list = request.data
+        my_list = transaction_list['transactionHistory']
+        customerName = my_list[0]['transactionName']
+        business = my_list[0]['transactionBusiness']
+        businessObj = BusinessModel.objects.get(businessId=business)
+        businessName = businessObj.businessName
+        totalCredit = totalDebit = totalPending = 0
+        for transact in my_list:
+            totalCredit += int(transact['transactionCredit'])
+            totalDebit += int(transact['transactionDebit'])
+        totalPending = int(totalCredit) - int(totalDebit)
+        # Getting gradify logo
+        local_url = "http://localhost:8000/media/"
+        yes_logo = YesMultiServicesLogo.objects.get(imageId=1)
+        my_logo = local_url+str(yes_logo.imageLogo)
+        transaction_list['logo'] = my_logo
+        transaction_list['totalCredit'] = totalCredit
+        transaction_list['totalDebit'] = totalDebit
+        transaction_list['totalPending'] = totalPending
+        transaction_list['customerName'] = customerName
+
+       #  Creating Pdf
+        try:
+            # Generating Pdf
+            pdf = render_to_pdf('pdf/transaction.html', transaction_list)
+            my_filename = customerName + " - Transaction History - " + datetime.now().strftime("%d%m%Y%H%M%S")+".pdf"
+            dic = {
+                "filename": my_filename
+            }
+
+            # Saving filename
+            serializers = SavePdfSerializer(data=dic)
+            if(serializers.is_valid()):
+                serializers.save()
+            my_pdf = SavePdf.objects.filter(filename=my_filename)[0]
+            output_file = PdfFileWriter()
+            input_file = PdfFileReader(File(BytesIO(pdf.content)))
+
+            # Adding Page no, website name and greetings in file
+            for page in range(input_file.getNumPages()):
+                tmp = BytesIO()
+                can = canvas.Canvas(tmp, pagesize=A4)
+                can.setFont('Times-Roman', 10)
+                can.drawString(25, 20, "Yes Multiservices")
+                can.drawString(290, 20, "***")
+                can.drawString(525, 20, "Page " + str(page + 1))
+                can.save()
+                tmp.seek(0)
+                watermark = PdfFileReader(tmp)
+                watermark_page = watermark.getPage(0)
+                pdf_page = input_file.getPage(page)
+                pdf_page.mergePage(watermark_page)
+                output_file.addPage(pdf_page)
+            tmp = BytesIO()
+            output_file.write(tmp)
+
+            # Saving Pdf
+            my_pdf.pdf_file.save(my_filename, File(tmp))
+            my_pdf = SavePdf.objects.filter(filename=my_filename)[0]
+            serializer = SavePdfSerializer(my_pdf)
+            transaction_list['pdf'] = serializer.data['pdf_file']
+
+            # Folder Path
+            folderPath = sheetsFolderPath + "/" + \
+                sheetsFolder
+            path = os.path.join(folderPath, businessName)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            folderPath = path
+            newFolder = datetime.now().strftime("%d%m%Y")
+            path = os.path.join(folderPath, newFolder)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            newPath = path
+            pdfPath = currentPath + transaction_list['pdf']
+            shutil.copy(pdfPath, newPath)
+            dic = {
+                "Type": "Success",
+                "msg": "Pdf genereted successfully",
+                "data": transaction_list['pdf']
+            }
+            return Response(data=dic)
+        except:
+            dic = {
+                "Type": "Error",
+                "msg": "Unable to Create pdf",
+                "data": None
+            }
+            return Response(data=dic)

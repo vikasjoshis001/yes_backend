@@ -2,20 +2,30 @@ import csv
 import os
 import pandas as pd
 from datetime import datetime
+import shutil
 
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
-from yes_backend.settings import sheetsFolder, sheetsFolderPath, sheetsCustomers
+from yes_backend.settings import sheetsFolder, sheetsFolderPath, sheetsCustomers,currentPath
 
 from requirements import success, error
-from .models import CustomersModel
-from .serializers import CustomersSerializer
+from .models import CustomersModel, SavePdf, YesMultiServicesLogo
+from .serializers import CustomersSerializer, SavePdfSerializer, YesMultiServicesLogoSerializer
 from Transaction.models import TransactionHistoryModel
 from Transaction.serializers import TransactionHistorySerializer
 from Business.models import BusinessModel
+
+# PDF
+from .utils import render_to_pdf
+from io import BytesIO
+from django.core.files import File
+from PyPDF2 import PdfFileReader, PdfFileWriter
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+
 # Create your views here.
 
 # Add Customer Api
@@ -206,20 +216,21 @@ class CustomerProfit(APIView):
     def get(self, request):
         customerId = request.query_params["customerId"]
         businessId = request.query_params["businessId"]
-        
+
         try:
-            customerObj = CustomersModel.objects.get(customerId = customerId,customerBusiness = businessId)
+            customerObj = CustomersModel.objects.get(
+                customerId=customerId, customerBusiness=businessId)
             customerName = customerObj.customerName
             customerContact = customerObj.customerContact
             customerAddress = customerObj.customerAddress
             customerAadharNumber = customerObj.customerAadharNumber
             customerPanNumber = customerObj.customerPanNumber
             customerDOB = customerObj.customerDOB
-            
+
             customerDic = {}
             customerList = []
             customerObjList = CustomersModel.objects.filter(customerName=customerName,
-                                                        customerContact=customerContact, customerAddress=customerAddress, customerAadharNumber=customerAadharNumber, customerPanNumber=customerPanNumber, customerDOB=customerDOB)
+                                                            customerContact=customerContact, customerAddress=customerAddress, customerAadharNumber=customerAadharNumber, customerPanNumber=customerPanNumber, customerDOB=customerDOB)
             print(customerObjList)
             serializer = CustomersSerializer(customerObjList, many=True)
             totalCredit = totalDebit = totalPending = 0
@@ -287,7 +298,7 @@ class CopyCustomersView(APIView):
                     "customerAddress": newCustomerAddress,
                     "customerAadharNumber": newCustomerAadharNumber,
                     "customerPanNumber": newCustomerPanNumber,
-                    "customerDOB":newCustomerDOB,
+                    "customerDOB": newCustomerDOB,
                     "customerBusiness": businessId,
                 }
                 serializer = CustomersSerializer(data=customer_dic)
@@ -338,18 +349,21 @@ class CreateCustomersCSV(APIView):
             # Folder Path
             folderPath = sheetsFolderPath + "/" + \
                 sheetsFolder
+            # Creating Business Folder
             path = os.path.join(folderPath, businessName.businessName)
             if not os.path.exists(path):
                 os.mkdir(path)
             folderPath = path
+            # Creating Current date folder
             newFolder = datetime.now().strftime("%d%m%Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
             newPath = path
+            # Filename
             filename = newPath + "/" + businessName.businessName + \
                 "-Customers List - " + datetime.now().strftime("%d%m%Y%H%M%S") + ".csv"
-            row_list = [["Name", "Credit", "Debit", "Pending", "Contact","Aadhar Card Number","Pan Card Number","Address","Date of Birth", ],
+            row_list = [["Name", "Credit", "Debit", "Pending", "Contact", "Aadhar Card Number", "Pan Card Number", "Address", "Date of Birth", ],
                         [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]]
             with open(filename, 'w', newline='') as file:
                 writer = csv.writer(file)
@@ -362,18 +376,18 @@ class CreateCustomersCSV(APIView):
                     "Debit": entry['customerDebit'],
                     "Pending": entry['customerPending'],
                     "Contact": entry['customerContact'],
-                    "Aadhar Card Number":entry["customerAadharNumber"],
-                    "Pan Card Number":entry["customerPanNumber"],
-                    "Address":entry["customerAddress"],
-                    "Date of Birth":entry["customerDOB"],
-                    
+                    "Aadhar Card Number": entry["customerAadharNumber"],
+                    "Pan Card Number": entry["customerPanNumber"],
+                    "Address": entry["customerAddress"],
+                    "Date of Birth": entry["customerDOB"],
+
                 }
                 totalCredit += int(entry['customerCredit'])
                 totalDebit += int(entry['customerDebit'])
                 totalPending += int(entry['customerPending'])
 
                 row_list = [[dic['Name'], dic['Credit'],
-                             dic['Debit'], dic['Pending'], dic['Contact'],dic['Aadhar Card Number'],dic['Pan Card Number'],dic["Address"],dic["Date of Birth"]]]
+                             dic['Debit'], dic['Pending'], dic['Contact'], dic['Aadhar Card Number'], dic['Pan Card Number'], dic["Address"], dic["Date of Birth"]]]
                 with open(filename, 'a') as file:
                     writer = csv.writer(file)
                     writer.writerows(row_list)
@@ -388,8 +402,8 @@ class CreateCustomersCSV(APIView):
             response_message = error.APIResponse(404, "Unable to Create CSV File", {
                                                  'error': str(e)}).respond()
             return Response(response_message)
-        
-        
+
+
 # Api to CreateProfitCSV
 class CreateProfitCSV(APIView):
     """Api for creating CSV FIle"""
@@ -456,3 +470,200 @@ class CreateProfitCSV(APIView):
                 'error': str(e)}).respond()
         finally:
             return Response(response_message)
+
+
+class CreateCustomerPdf(APIView):
+    """ API for Creating Pdf of Grades and SGPA"""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # taking data
+        customers_list = request.data
+        # print(customers_list)
+        totalCredit = totalDebit = totalPending = 0
+        my_list = customers_list['customersList']
+        business = my_list[0]['customerBusiness']
+        businessName = BusinessModel.objects.get(businessId=business)
+        for element in my_list:
+            totalCredit += int(element['customerCredit'])
+            totalDebit += int(element['customerDebit'])
+            totalPending += int(element['customerPending'])
+
+        # Getting gradify logo
+        local_url = "http://localhost:8000/media/"
+        yes_logo = YesMultiServicesLogo.objects.get(imageId=1)
+        my_logo = local_url+str(yes_logo.imageLogo)
+        customers_list['logo'] = my_logo
+        customers_list['totalCredit'] = totalCredit
+        customers_list['totalDebit'] = totalDebit
+        customers_list['totalPending'] = totalPending
+        customers_list['businessName'] = businessName.businessName
+
+       #  Creating Pdf
+        try:
+            # Generating Pdf
+            pdf = render_to_pdf('pdf/customer.html', customers_list)
+            my_filename = businessName.businessName +"- Customers List - " + datetime.now().strftime("%d%m%Y%H%M%S")+".pdf"
+            dic = {
+                "filename": my_filename
+            }
+
+            # Saving filename
+            serializers = SavePdfSerializer(data=dic)
+            if(serializers.is_valid()):
+                serializers.save()
+            my_pdf = SavePdf.objects.filter(filename=my_filename)[0]
+            output_file = PdfFileWriter()
+            input_file = PdfFileReader(File(BytesIO(pdf.content)))
+
+            # Adding Page no, website name and greetings in file
+            for page in range(input_file.getNumPages()):
+                tmp = BytesIO()
+                can = canvas.Canvas(tmp, pagesize=A4)
+                can.setFont('Times-Roman', 10)
+                can.drawString(25, 20, "Yes Multiservices")
+                can.drawString(290, 20, "***")
+                can.drawString(525, 20, "Page " + str(page + 1))
+                can.save()
+                tmp.seek(0)
+                watermark = PdfFileReader(tmp)
+                watermark_page = watermark.getPage(0)
+                pdf_page = input_file.getPage(page)
+                pdf_page.mergePage(watermark_page)
+                output_file.addPage(pdf_page)
+            tmp = BytesIO()
+            output_file.write(tmp)
+
+            # Saving Pdf
+            my_pdf.pdf_file.save(my_filename, File(tmp))
+            my_pdf = SavePdf.objects.filter(filename=my_filename)[0]
+            serializer = SavePdfSerializer(my_pdf)
+            customers_list['pdf'] = serializer.data['pdf_file']
+
+            # Folder Path
+            folderPath = sheetsFolderPath + "/" + \
+                sheetsFolder
+            # Creating Business Folder
+            path = os.path.join(folderPath, businessName.businessName)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            folderPath = path
+            # Creating Current date folder
+            newFolder = datetime.now().strftime("%d%m%Y")
+            path = os.path.join(folderPath, newFolder)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            newPath = path
+            pdfPath = currentPath + customers_list['pdf']
+            shutil.move(pdfPath, newPath)
+
+            dic = {
+                "Type": "Success",
+                "msg": "Pdf genereted successfully",
+                "data": customers_list['pdf']
+            }
+            return Response(data=dic)
+        except:
+            dic = {
+                "Type": "Error",
+                "msg": "Unable to Create pdf",
+                "data": None
+            }
+            return Response(data=dic)
+
+
+class CreateProfitPdf(APIView):
+    """ API for Creating Pdf of Grades and SGPA"""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        profit_list = request.data
+        my_list = profit_list['profitList']
+        customerName = my_list[0]['customerName']
+        businessName = my_list[0]['customerBusiness']
+        totalCredit = totalDebit = totalPending = 0
+        for profit in my_list:
+            totalCredit += int(profit['customerCredit'])
+            totalDebit += int(profit['customerDebit'])
+            totalPending += int(profit['customerPending'])
+
+        # Getting gradify logo
+        local_url = "http://localhost:8000/media/"
+        yes_logo = YesMultiServicesLogo.objects.get(imageId=1)
+        my_logo = local_url+str(yes_logo.imageLogo)
+        profit_list['logo'] = my_logo
+        profit_list['totalCredit'] = totalCredit
+        profit_list['totalDebit'] = totalDebit
+        profit_list['totalPending'] = totalPending
+        profit_list['customerName'] = customerName
+
+       #  Creating Pdf
+        try:
+            # Generating Pdf
+            pdf = render_to_pdf('pdf/profit.html', profit_list)
+            my_filename = customerName + " - Behaviour - " + datetime.now().strftime("%d%m%Y%H%M%S")+".pdf"
+            dic = {
+                "filename": my_filename
+            }
+
+            # Saving filename
+            serializers = SavePdfSerializer(data=dic)
+            if(serializers.is_valid()):
+                serializers.save()
+            my_pdf = SavePdf.objects.filter(filename=my_filename)[0]
+            output_file = PdfFileWriter()
+            input_file = PdfFileReader(File(BytesIO(pdf.content)))
+
+            # Adding Page no, website name and greetings in file
+            for page in range(input_file.getNumPages()):
+                tmp = BytesIO()
+                can = canvas.Canvas(tmp, pagesize=A4)
+                can.setFont('Times-Roman', 10)
+                can.drawString(25, 20, "Yes Multiservices")
+                can.drawString(290, 20, "***")
+                can.drawString(525, 20, "Page " + str(page + 1))
+                can.save()
+                tmp.seek(0)
+                watermark = PdfFileReader(tmp)
+                watermark_page = watermark.getPage(0)
+                pdf_page = input_file.getPage(page)
+                pdf_page.mergePage(watermark_page)
+                output_file.addPage(pdf_page)
+            tmp = BytesIO()
+            output_file.write(tmp)
+
+            # Saving Pdf
+            my_pdf.pdf_file.save(my_filename, File(tmp))
+            my_pdf = SavePdf.objects.filter(filename=my_filename)[0]
+            serializer = SavePdfSerializer(my_pdf)
+            profit_list['pdf'] = serializer.data['pdf_file']
+
+            # Folder Path
+            folderPath = sheetsFolderPath + "/" + \
+                sheetsFolder
+            path = os.path.join(folderPath, businessName)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            folderPath = path
+            newFolder = datetime.now().strftime("%d%m%Y")
+            path = os.path.join(folderPath, newFolder)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            newPath = path
+            pdfPath = currentPath + profit_list['pdf']
+            shutil.copy(pdfPath, newPath)
+            dic = {
+                "Type": "Success",
+                "msg": "Pdf genereted successfully",
+                "data": profit_list['pdf']
+            }
+            return Response(data=dic)
+        except:
+            dic = {
+                "Type": "Error",
+                "msg": "Unable to Create pdf",
+                "data": None
+            }
+            return Response(data=dic)

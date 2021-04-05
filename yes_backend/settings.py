@@ -66,7 +66,7 @@ ROOT_URLCONF = 'yes_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -140,6 +140,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
 # Email Service
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -172,3 +175,4 @@ DATETIME_INPUT_FORMATS = ['%d-%m-%Y %H:%M']
 sheetsFolderPath = "/home/vikasjoshis001/Desktop"
 sheetsFolder = "CSV Sheets"
 sheetsCustomers = "Customers Sheets"
+currentPath = "/home/vikasjoshis001/Desktop/Yes MultiServices/yes_backend"

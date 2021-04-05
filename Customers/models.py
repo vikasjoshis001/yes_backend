@@ -28,3 +28,12 @@ class CustomersModel(models.Model):
 
     def __str__(self):
         return self.customerName
+    
+class SavePdf(models.Model):
+       filename = models.CharField(max_length=120)
+       pdf_file = models.FileField(upload_to='pdfs/', null=True, blank=True)
+       
+class YesMultiServicesLogo(models.Model):
+    imageId = models.AutoField(primary_key=True)
+    imageName = models.CharField(max_length=120)
+    imageLogo = models.FileField(upload_to='images/', null=True, blank=True)
