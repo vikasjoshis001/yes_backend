@@ -332,6 +332,26 @@ class CopyCustomersView(APIView):
         finally:
             return Response(response_message)
 
+# Delete All Customers
+class DeleteAllCustomers(APIView):
+    """ Api to Delete All Customers """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        customersId = request.data
+        try:
+            for userId in customersId:
+                customerObj = CustomersModel.objects.filter(customerId=userId)
+                customerObj.delete()
+                response_message = success.APIResponse(
+                    200, "Customer Deleted Successfully", None).respond()
+        except Exception as e:
+            response_message = error.APIResponse(404, "Unable to delete Customer", {
+                'error': str(e)}).respond()
+        finally:
+            return Response(response_message)
+
 
 # Api to CreateCusomersCSV
 class CreateCustomersCSV(APIView):
@@ -355,7 +375,7 @@ class CreateCustomersCSV(APIView):
                 os.mkdir(path)
             folderPath = path
             # Creating Current date folder
-            newFolder = datetime.now().strftime("%d%m%Y")
+            newFolder = datetime.now().strftime("%d - %m - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
@@ -424,7 +444,7 @@ class CreateProfitCSV(APIView):
             if not os.path.exists(path):
                 os.mkdir(path)
             folderPath = path
-            newFolder = datetime.now().strftime("%d%m%Y")
+            newFolder = datetime.now().strftime("%d - %m - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
@@ -550,7 +570,7 @@ class CreateCustomerPdf(APIView):
                 os.mkdir(path)
             folderPath = path
             # Creating Current date folder
-            newFolder = datetime.now().strftime("%d%m%Y")
+            newFolder = datetime.now().strftime("%d - %m - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
@@ -647,7 +667,7 @@ class CreateProfitPdf(APIView):
             if not os.path.exists(path):
                 os.mkdir(path)
             folderPath = path
-            newFolder = datetime.now().strftime("%d%m%Y")
+            newFolder = datetime.now().strftime("%d - %m - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)

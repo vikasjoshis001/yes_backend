@@ -144,7 +144,7 @@ class CreateTransactionCSV(APIView):
             if not os.path.exists(path):
                 os.mkdir(path)
             folderPath = path
-            newFolder = datetime.now().strftime("%d%m%Y")
+            newFolder = datetime.now().strftime("%d - %m - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
@@ -268,7 +268,7 @@ class CreateTransactionPdf(APIView):
             if not os.path.exists(path):
                 os.mkdir(path)
             folderPath = path
-            newFolder = datetime.now().strftime("%d%m%Y")
+            newFolder = datetime.now().strftime("%d - %m - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)

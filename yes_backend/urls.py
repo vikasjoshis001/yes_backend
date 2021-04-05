@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from login.views import LoginView
 from Business.views import AddBusinessView, GetBusinessView, DeleteBusinessView, EditBusinessView
-from Customers.views import AddCustomerView, GetCustomersView, DeleteCustomerView, EditCustomerView,CustomerProfit,CreateCustomersCSV,CopyCustomersView,CreateProfitCSV,CreateCustomerPdf,CreateProfitPdf
+from Customers.views import AddCustomerView, GetCustomersView, DeleteAllCustomers,DeleteCustomerView, EditCustomerView,CustomerProfit,CreateCustomersCSV,CopyCustomersView,CreateProfitCSV,CreateCustomerPdf,CreateProfitPdf
 from finance.views import BackUpDataBase
 from Transaction.views import AddTransactionView, GetTransactionView,CreateTransactionCSV,CreateTransactionPdf
  
@@ -58,9 +58,10 @@ urlpatterns = [
     path('editCustomer/', EditCustomerView.as_view()),
     path('getCustomerProfit/', CustomerProfit.as_view()),
     path('copyCustomers/', CopyCustomersView.as_view()),
+    path('deleteAllCustomers/', DeleteAllCustomers.as_view()),
     path('createCustomersCSV/', CreateCustomersCSV.as_view()),
     path('createProfitCSV/', CreateProfitCSV.as_view()),
-    path('createCustomerPdf/', CreateCustomerPdf.as_view()),
+    path('createCustomersPdf/', CreateCustomerPdf.as_view()),
     path('createProfitPdf/', CreateProfitPdf.as_view()),
     
     
