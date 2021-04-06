@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
-from yes_backend.settings import sheetsFolder, sheetsFolderPath, sheetsCustomers,currentPath
+from yes_backend.settings import sheetsFolder, sheetsFolderPath, sheetsCustomers, currentPath
+from operator import itemgetter
 
 from requirements import success, error
 from .models import CustomersModel, SavePdf, YesMultiServicesLogo
@@ -333,6 +334,8 @@ class CopyCustomersView(APIView):
             return Response(response_message)
 
 # Delete All Customers
+
+
 class DeleteAllCustomers(APIView):
     """ Api to Delete All Customers """
 
@@ -524,7 +527,8 @@ class CreateCustomerPdf(APIView):
         try:
             # Generating Pdf
             pdf = render_to_pdf('pdf/customer.html', customers_list)
-            my_filename = businessName.businessName +"- Customers List - " + datetime.now().strftime("%d%m%Y%H%M%S")+".pdf"
+            my_filename = businessName.businessName + "- Customers List - " + \
+                datetime.now().strftime("%d%m%Y%H%M%S")+".pdf"
             dic = {
                 "filename": my_filename
             }
@@ -623,7 +627,8 @@ class CreateProfitPdf(APIView):
         try:
             # Generating Pdf
             pdf = render_to_pdf('pdf/profit.html', profit_list)
-            my_filename = customerName + " - Behaviour - " + datetime.now().strftime("%d%m%Y%H%M%S")+".pdf"
+            my_filename = customerName + " - Behaviour - " + \
+                datetime.now().strftime("%d%m%Y%H%M%S")+".pdf"
             dic = {
                 "filename": my_filename
             }

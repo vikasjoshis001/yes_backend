@@ -20,7 +20,7 @@ class BackUpDataBase(APIView):
         try:
             subject = "Database  Backup of Yes MultiServices"
             message = ""
-            recipient_list = ['vikasjoshis001@gmail.com']
+            recipient_list = ['vikasjoshis001@gmail.com','crunchbase.io@gmail.com']
             email = EmailMessage(
                 subject, message, 'crunchbase.io@gmail.com', recipient_list)
             email.attach_file("./db.sqlite3")
