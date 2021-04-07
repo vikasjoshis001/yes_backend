@@ -378,7 +378,7 @@ class CreateCustomersCSV(APIView):
                 os.mkdir(path)
             folderPath = path
             # Creating Current date folder
-            newFolder = datetime.now().strftime("%d - %m - %Y")
+            newFolder = datetime.now().strftime("%d - %B - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
@@ -447,7 +447,7 @@ class CreateProfitCSV(APIView):
             if not os.path.exists(path):
                 os.mkdir(path)
             folderPath = path
-            newFolder = datetime.now().strftime("%d - %m - %Y")
+            newFolder = datetime.now().strftime("%d - %B - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
@@ -574,7 +574,7 @@ class CreateCustomerPdf(APIView):
                 os.mkdir(path)
             folderPath = path
             # Creating Current date folder
-            newFolder = datetime.now().strftime("%d - %m - %Y")
+            newFolder = datetime.now().strftime("%d - %B - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
@@ -672,13 +672,17 @@ class CreateProfitPdf(APIView):
             if not os.path.exists(path):
                 os.mkdir(path)
             folderPath = path
-            newFolder = datetime.now().strftime("%d - %m - %Y")
+            newFolder = datetime.now().strftime("%d - %B - %Y")
             path = os.path.join(folderPath, newFolder)
             if not os.path.exists(path):
                 os.mkdir(path)
             newPath = path
+            path = os.path.join(newPath, customerName)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            newPath = path
             pdfPath = currentPath + profit_list['pdf']
-            shutil.copy(pdfPath, newPath)
+            shutil.move(pdfPath, newPath)
             dic = {
                 "Type": "Success",
                 "msg": "Pdf genereted successfully",
