@@ -18,7 +18,7 @@ class TransactionHistoryModel(models.Model):
     transactionBusiness = models.ForeignKey(
         BusinessModel, on_delete=models.CASCADE)
     transactionDate = models.DateField(auto_now_add=True)
-    transactionTime = models.TimeField(auto_now_add=True)
+    transactionTime = models.TimeField()
 
     def __str__(self):
         return self.transactionName

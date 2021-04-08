@@ -140,6 +140,8 @@ class BusinessManagement(APIView):
                 businessList = businessList.values()
                 businessObj  = BusinessModel.objects.get(businessId=businessId)
                 businessName = businessObj.businessName
+                businessCreatedAt = businessObj.businessCreatedAt.date().strftime("%d %B %Y")
+                totalCustomers = len(businessList)
                 totalDic = {}
                 for i in range(len(businessList)):
                     totalCredit += int(businessList[i]['customerCredit'])
@@ -149,6 +151,8 @@ class BusinessManagement(APIView):
                 totalDic['totalDebit'] = totalDebit
                 totalDic['totalPending'] = totalPending
                 totalDic['businessName'] = businessName
+                totalDic['businessCreatedAt'] = businessCreatedAt
+                totalDic['totalCustomers'] = totalCustomers
                 response_message = success.APIResponse(200, "List of All Finance", {
                                                     "totalList": totalDic}).respond()
             except Exception as e:

@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, fields
 
 from .models import TransactionHistoryModel
 
@@ -7,6 +7,9 @@ from .models import TransactionHistoryModel
 
 class TransactionHistorySerializer(serializers.ModelSerializer):
     """ Transaction History Model Serializer """
+    
+    transactionTime = fields.TimeField(input_formats=['%H %M %S'])
+    
     class Meta:
         model = TransactionHistoryModel
         fields = "__all__"

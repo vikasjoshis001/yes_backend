@@ -62,7 +62,8 @@ class AddTransactionView(generics.CreateAPIView):
                 "transactionCredit": transactionCredit,
                 "transactionPending": int(customerCredit) - int(customerDebit),
                 "transactionBusiness": transactionBusiness,
-                "transactionCustomer": transactionCustomer
+                "transactionCustomer": transactionCustomer,
+                'transactionTime':  datetime.now().strftime("%H %M %S")
             }
 
             serializer = TransactionHistorySerializer(data=transaction_dic)
@@ -70,6 +71,7 @@ class AddTransactionView(generics.CreateAPIView):
                 serializer.save()
 
             else:
+                print("Error")
                 response_message = success.APIResponse(
                     404, "Customer Does Not Exist", {'error': None}).respond()
                 return Response(response_message)
@@ -77,6 +79,7 @@ class AddTransactionView(generics.CreateAPIView):
             response_message = success.APIResponse(
                 200, "Transaction Added Successfully", transaction_dic).respond()
         except Exception as e:
+            print(str(e))
             response_message = error.APIResponse(404, "Unable to add Transaction", {
                                                  'error': str(e)}).respond()
         finally:
