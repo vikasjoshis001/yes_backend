@@ -315,7 +315,8 @@ class CopyCustomersView(APIView):
                     "transactionCredit": 0,
                     "transactionPending": 0,
                     "transactionBusiness": businessId,
-                    "transactionCustomer": serializer.data['customerId']
+                    "transactionCustomer": serializer.data['customerId'],
+                    "transactionTime":  datetime.now().strftime("%H %M %S")
                 }
                 serializer = TransactionHistorySerializer(data=transaction_dic)
                 if (serializer.is_valid()):
