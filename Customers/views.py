@@ -74,12 +74,16 @@ class AddCustomerView(APIView):
                 "transactionCredit": customerCredit,
                 "transactionPending": int(customerCredit) - int(customerDebit),
                 "transactionBusiness": customerBusiness,
-                "transactionCustomer": serializer.data['customerId']
+                "transactionCustomer": serializer.data['customerId'],
+                'transactionTime':  datetime.now().strftime("%H %M %S")
             }
+            print(transaction_dic)
             serializer = TransactionHistorySerializer(data=transaction_dic)
             if (serializer.is_valid()):
+                print("TRANSACTION ADDED")
                 serializer.save()
             else:
+                print("TRANSACTION NOT ADDED")
                 response_message = success.APIResponse(
                     404, "Unable to add customer to Transaction Model", {'error': None}).respond()
                 return Response(response_message)
